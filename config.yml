@@ -1,0 +1,11 @@
+data_distributor:
+  local_dataset:
+    data: data.csv
+    task: classification
+    target_value: '10'
+    sep: ','
+  sampling:
+    type: Non-IID
+    non_iid_ness: 1
+  result:
+    data: data.csv

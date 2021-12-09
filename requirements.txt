@@ -1,0 +1,11 @@
+bottle
+jsonpickle
+joblib
+numpy
+bios
+pydot
+pyyaml
+pandas
+matplotlib
+seaborn
+FeatureCloud==0.0.4
