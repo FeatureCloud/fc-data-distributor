@@ -19,9 +19,9 @@ import bios
 from utils import save_numpy, load_numpy, sep_feat_from_label, log_send_data, log_data
 import ConfigState
 
-from .utils import log_dataframe, plot_clients_data, noniid_sampling, unsupervised_iid_sampling, supervised_iid_sampling
+from utils import log_dataframe, plot_clients_data, noniid_sampling, unsupervised_iid_sampling, supervised_iid_sampling
 
-name = 'data_distributor'
+name = 'fc_data_distributor'
 
 
 @app_state(name='initial', role=Role.BOTH, app_name=name)

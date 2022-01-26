@@ -11,7 +11,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+from FeatureCloud.engine.app import LogLevel, app
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -171,3 +171,75 @@ def log_dataframe(df):
         for c in df.columns.values[:5]:
             msg += f"\t{c}\n"
     return msg
+
+
+def log_data(data, log_func):
+    """ logs the data based on its type, length, and value
+
+    Parameters
+    ----------
+    data: str
+    title: str
+    """
+    log_func(f"Data:\n"
+             f"\tType: {type(data)}\n"
+             f"\tlength: {len(data)}", LogLevel.DEBUG)
+    for i, d in enumerate(data):
+        if hasattr(d, "__len__") and len(d) > 1:
+            log_func(f"\t{i}: Length= {len(d)}", LogLevel.DEBUG)
+        else:
+            log_func(f"\t{i}: Data= {d}", LogLevel.DEBUG)
+
+
+def log_send_data(data, log_func):
+    """ Logs data in terms of legth, type, and value
+
+        Parameters
+        ----------
+        data: list
+        """
+    log_func(f"Sending data to coordinator", LogLevel.DEBUG)
+    log_func(f"Type: {type(data)}\n"
+             f"length: {len(data)}", LogLevel.DEBUG)
+    for i, d in enumerate(data[:3]):
+        if hasattr(d, '__len__'):
+            log_func(f"\t{i} >>> Length: {len(d)}", LogLevel.DEBUG)
+        else:
+            log_func(f"\t{i} >>> Data: {d}", LogLevel.DEBUG)
+
+def save_numpy(file_name, features, labels, target):
+    format = file_name.strip().split(".")[1].lower()
+    save = {"npy": np.save, "npz": np.savez_compressed}
+    if target == "same-sep":
+        save[format](file_name, np.array([features, labels]))
+    elif target == "same-last":
+        samples = [np.append(features[i], labels[i]) for i in range(features.shape[0])]
+        save[format](file_name, samples)
+    elif target.strip().split(".")[1].lower() == 'npy':
+        np.save(file_name, features)
+        np.save(target, labels)
+    elif target.strip().split(".")[1].lower() in 'npz':
+        np.savez_compressed(file_name, features)
+        np.savez_compressed(target, labels)
+    else:
+        return None
+
+
+def load_numpy(file_name):
+    ds = np.load(file_name, allow_pickle=True)
+    format = file_name.strip().split(".")[1].lower()
+    if format == "npz":
+        return ds['arr_0']
+    return ds
+
+
+def sep_feat_from_label(ds, target):
+    if target == 'same-sep':
+        return pd.DataFrame({"features": [s for s in ds[0]], "label": ds[1]})
+    elif target == 'same-last':
+        return pd.DataFrame({"features": [s[:-1] for s in ds], "label": [s[-1] for s in ds]})
+    elif target.strip().split(".")[1].lower() in ['npy', 'npz']:
+        labels = load_numpy(target)
+        return pd.DataFrame({"features": [s for s in ds], "label": labels})
+    else:
+        return None

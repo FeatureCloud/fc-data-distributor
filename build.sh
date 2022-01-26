@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build . --tag featurecloud.ai/companion_apps
+docker build . --tag featurecloud.ai/fc_data_distributor
