@@ -11,9 +11,9 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-from FeatureCloud.engine.app import app_state, AppState, Role, LogLevel
-from FeatureCloud.engine.app import State as op_state
+import numpy as np
+from FeatureCloud.app.engine.app import app_state, AppState, Role, LogLevel
+from FeatureCloud.app.engine.app import State as op_state
 import pandas as pd
 import bios
 from utils import save_numpy, load_numpy, sep_feat_from_label, log_send_data, log_data
@@ -82,21 +82,30 @@ class DistributeData(ConfigState.State):
                 self.log(df.columns, LogLevel.DEBUG)
                 self.log(log_dataframe(df), LogLevel.DEBUG)
             return df
-        if self.config['format'] in ['npy', 'npz']:
-            ds = load_numpy(file_name)
-
-            self.log(f"Number of rows: {len(ds)}\n"
-                     f"Number of columns: {len(ds[0])}", LogLevel.DEBUG)
+        if self.config['format'] == 'npz':
+            ds = np.load(file_name)
+            data, targets = ds['data'], ds['targets']
+            self.log(f"Number of rows: {len(data)}\n"
+                     f"Feature shape: {data.shape[1:]}\n"
+                     f"Unique labels: {np.unique(targets)}", LogLevel.DEBUG)
             if self.config['local_dataset']['task'] == 'classification':
-                df = sep_feat_from_label(ds, self.config['local_dataset']['target_value'])
-                if df is None:
-                    self.log(f"{self.config['local_dataset']['target_value']} is not supported", LogLevel.ERROR)
-                    self.update(state=op_state.ERROR)
-                self.log(f"Number of unique labels: {len(df.label.unique())}", LogLevel.DEBUG)
-                return df
+                return pd.DataFrame({"features": list(data), "label": targets})
 
-            # Regression or Clustering
-            return pd.DataFrame({"features": [s for s in ds]})
+        # 'npy'
+        ds = load_numpy(file_name)
+
+        self.log(f"Number of rows: {len(ds)}\n"
+                 f"Number of columns: {len(ds[0])}", LogLevel.DEBUG)
+        if self.config['local_dataset']['task'] == 'classification':
+            df = sep_feat_from_label(ds, self.config['local_dataset']['target_value'])
+            if df is None:
+                self.log(f"{self.config['local_dataset']['target_value']} is not supported", LogLevel.ERROR)
+                self.update(state=op_state.ERROR)
+            self.log(f"Number of unique labels: {len(df.label.unique())}", LogLevel.DEBUG)
+            return df
+
+        # Regression or Clustering
+        return pd.DataFrame({"features": [s for s in ds]})
 
     def sample_dataset(self, df):
         non_iid_ness = self.config['sampling']['non_iid_ness']
@@ -139,8 +148,11 @@ class WriteResults(AppState):
             sep = config_file[name]['local_dataset']['sep']
             bios.write(config_filename, config_file)
         format = file_name.split('.')[-1]
-        if format in ['npy', 'npz']:
+
+        if format == 'npy':
             save_numpy(file_name, data.features.values, data.label.values, target)
+        elif format == 'npz':
+            np.savez_compressed(file_name, data=data.features.values, targets=data.label.values)
         else:
             data.rename(columns={'label': target}, inplace=True)
             data.to_csv(file_name, sep=sep, index=False)
