@@ -11,14 +11,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from FeatureCloud.engine.app import LogLevel, app
+from FeatureCloud.app.engine.app import LogLevel, app
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from bottle import Bottle
-from FeatureCloud.api.http_ctrl import api_server
-from FeatureCloud.api.http_web import web_server
+from FeatureCloud.app.api.http_ctrl import api_server
+from FeatureCloud.app.api.http_web import web_server
 
 
 def run(host='localhost', port=5000):

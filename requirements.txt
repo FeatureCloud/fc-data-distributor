@@ -8,4 +8,4 @@ pyyaml
 pandas
 matplotlib
 seaborn
-FeatureCloud==0.0.4
+FeatureCloud
