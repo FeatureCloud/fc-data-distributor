@@ -62,10 +62,11 @@ fc_data_distributor:
 ```
 #### Config file options:
 In the config file, `local_dataset` is very similar to the [corss validation](https://github.com/FeatureCloud/fc-cross-validation/tree/Numpy#input).
-- `local_dataset`: Includes the name of the data file, the target task that data should be preprocessed for, and the target value file or column. Also, for CSV files, it is possible to determine the delimiter. 
+- local_dataset: Includes the name of the data file, the target task that data should be preprocessed for, and the target value file or column. Also, for CSV files, it is possible to determine the delimiter. 
   The config files include the name of the centralized data, which can have different extensions.
   - Data extension: data file can be three formats of `.txt`, `.csv`, and `.npy` 
-    - `.npy` or `.npz`: NumPy files are supported, which can be used with the Deep Learning app (and its companion apps).
+    - `.npz`: NpmPy compressed files are supposed to have `data` and `targets` keys for samples and target values.
+    - `.npy`: NumPy files are supported, which can be used with the Deep Learning app (and its companion apps).
       for the NumPy file, the target value(Label) can be placed at a separate Numpy array or the end of the sample
       array.
     - `.csv`: These files can be used with different separators, while the name of the label column should be provided.
@@ -93,4 +94,6 @@ In the config file, `local_dataset` is very similar to the [corss validation](ht
     - `Non-IID`: Currently, only classification data are supported!
   - Non-IID-ness: The level on Non-IID-ness can vary between 1 and the number of labels;
   And it will be ignored for IID sampling.
+- results:
+  - data: data file name. In case of `npz` files, the same data and target keys will be used to store data and target values.
 
