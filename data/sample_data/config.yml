@@ -1,0 +1,11 @@
+fc_data_distributor:
+  local_dataset:
+    data: data.npy
+    task: classification
+    target_value: 'same-sep'
+    sep: ','
+  sampling:
+    type: IID
+    non_iid_ness: 1
+  result:
+    data: data.npy
