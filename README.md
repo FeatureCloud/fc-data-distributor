@@ -1,8 +1,8 @@
-# FeatureCloud Data Distributor app
-### Easy experiment with FeatureCloud platform
+# [FeatureCloud Data Distributor app](https://featurecloud.ai/app/data-distributor)
+### Easy experiment with the FeatureCloud platform
 Using the Data Distributor app, users can experiment with different FeatureCloud applications
 just by sharing tokens. Usually, FeatureCloud participants, both coordinator and clients, need to 
-have their own private data and globally shared config file to conduct an experiment in a federated fashion with the FeatureCloud platform; however, with the Data Distributor app, only the coordinator should 
+have their private data and globally shared config file to experiment with a federated fashion with the FeatureCloud platform; however, with the Data Distributor app, only the coordinator should 
 upload a centralized data and config file to start a workflow, while other clients can join by invitation
 token.
 The data distributor provides an easy way to distribute centralized data across clients with different levels of data heterogeneity.
@@ -29,8 +29,8 @@ Output files will be with the same extensions as the input files.
 
 #### Non-IID
 
-Non-IID-ness can vary based on the number of clients that have access to a specific class label.
-For instance, here, Non-IID(1) is plotted, where samples of each class label can be found in local data of one client(No more clients will get such samples). If there are fewer clients
+Non-IID-ness can vary based on the number of clients accessing a specific class label.
+For instance, here, Non-IID(1) is plotted, where samples of each class label can be found in the local data of one client(No more clients will get such samples). If there are fewer clients
 than the level of Non-IID-ness, fewer clients may get samples of a specific class. In that regard,
 Non-IID-ness is an upper bound of label availability.
 
@@ -70,15 +70,15 @@ In the config file, `local_dataset` is very similar to the [corss validation](ht
       for the NumPy file, the target value(Label) can be placed at a separate Numpy array or the end of the sample
       array.
     - `.csv`: These files can be used with different separators, while the name of the label column should be provided.
-      Indexes will be ignored and not being added to the result file.
+      Indexes will be ignored and not added to the result file.
     - `.txt`: Same as `.csv` files. 
-  - Task: The task that the centralized data should be distributed for. 
+  - Task: The centralized data will be distributed based on the task. 
     The task name is not case-sensitive and can be:
       - 'Classification'
       - 'Regression'
       - 'Clustering' 
   - Target Value: For CSV and TXT files, conveniently, target values are in a column; however,
-      For instance, there are no target values for Clustering data and provided target value option will be ignored. For NumPy files, it can be either in the same or separate file.  
+      For instance, there are no target values for Clustering data, and provided target value option will be ignored. For NumPy files, it can be either in the same or separate file.  
     - CSV: the target value config option is the column's name that contains the target value.
     - TXT: Same as CSV.
     - NumPy: for NumPy files, there are three available options:
@@ -92,8 +92,40 @@ In the config file, `local_dataset` is very similar to the [corss validation](ht
   - Type: Sampling type options are two, and neither are case-sensitive:
     - `IID`
     - `Non-IID`: Currently, only classification data are supported!
-  - Non-IID-ness: The level on Non-IID-ness can vary between 1 and the number of labels;
+  - Non-IID-ness: The level of Non-IID-ness can vary between 1 and the number of labels;
   And it will be ignored for IID sampling.
 - results:
-  - data: data file name. In case of `npz` files, the same data and target keys will be used to store data and target values.
+  - data: data file name. In the case of `npz` files, the same data and target keys will be used to store both data and target values.
 
+### Run Data distributor
+
+#### Prerequisite
+
+To run the data distributor application, you should install Docker and FeatureCloud pip package:
+
+```shell
+pip install featurecloud
+```
+
+Then either download the data distributor image from featurecloud docker repository:
+
+```shell
+featurecloud app download featurecloud.ai/fc_data_distributor
+```
+
+Or build the app locally:
+
+```shell
+featurecloud app build featurecloud.ai/fc_data_distributor
+```
+
+You can use provided example data or your own data with the desired settings in the `config.yml` file.
+For `.npy` format you should set the `target_value` option to `same_sep` and for `data.csv`, `10`.
+
+#### Running app
+
+You can run sPLINK as a standalone app in the [FeatureCloud test-bed](https://featurecloud.ai/development/test) or [FeatureCloud Workflow](https://featurecloud.ai/projects). You can also run the app using CLI:
+
+```shell
+featurecloud test start --app-image featurecloud.ai/fc_data_distributor --client-dirs './sample_data,./sample_data'
+```
