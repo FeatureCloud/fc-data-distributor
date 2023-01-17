@@ -124,7 +124,7 @@ For `.npy` format you should set the `target_value` option to `same_sep` and for
 
 #### Running app
 
-You can run sPLINK as a standalone app in the [FeatureCloud test-bed](https://featurecloud.ai/development/test) or [FeatureCloud Workflow](https://featurecloud.ai/projects). You can also run the app using CLI:
+You can run data distributor as a standalone app in the [FeatureCloud test-bed](https://featurecloud.ai/development/test) or [FeatureCloud Workflow](https://featurecloud.ai/projects). You can also run the app using CLI:
 
 ```shell
 featurecloud test start --app-image featurecloud.ai/fc_data_distributor --client-dirs './sample_data,./sample_data'
