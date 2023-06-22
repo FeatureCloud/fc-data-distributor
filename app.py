@@ -36,16 +36,26 @@ class DistributeData(ConfigState.State):
             self.read_config()
             self.finalize_config()
             self.sanity_check()
-            file_name = self.load('input_files')['data'][0]
+            file_name = self.load('input_files')['train'][0]
             df = self.load_dataset(file_name)
-            clients_data = self.sample_dataset(df)
+            clients_train = self.sample_dataset(df)
 
-            plot_clients_data(clients_data, self.output_dir)
+            plot_clients_data(clients_train, f"{self.output_dir}/{self.config['local_dataset']['train'][:-4]}")
+            test_file = self.config['local_dataset'].get('test', False)
+            if test_file:
+                testset = self.load('input_files')['test'][0]
+                testset = self.load_dataset(testset)
+                clients_test = self.sample_dataset(testset)
+                plot_clients_data(clients_test, f"{self.output_dir}/{self.config['local_dataset']['test'][:-4]}")
             config_file = bios.read(self.config_file)
+
             for client in self.clients:
-                client_data = clients_data[clients_data.ASSIGNED_CLIENT == client]
-                log_send_data([client_data, config_file], self.log)
-                self.send_data_to_participant(data=[client_data, config_file], destination=client)
+                client_train = clients_train[clients_train.ASSIGNED_CLIENT == client]
+                client_test = None
+                if test_file:
+                    client_test = clients_test[clients_test.ASSIGNED_CLIENT == client]
+                log_send_data([client_train, config_file], self.log)
+                self.send_data_to_participant(data=[client_train, client_test, config_file], destination=client)
             self.store('config', self.config)
         else:
             self.store('splits', {'temp'})
@@ -53,7 +63,7 @@ class DistributeData(ConfigState.State):
         return 'WriteResults'
 
     def sanity_check(self):
-        self.config['format'] = self.config['local_dataset']['data'].strip().split(".")[-1].lower()
+        self.config['format'] = self.config['local_dataset']['train'].strip().split(".")[-1].lower()
         if not self.config['format'] in ['txt', 'npy', 'npz', 'csv']:
             self.log(f"Unsupported {self.config['format']} file extension!", LogLevel.ERROR)
             self.update(state=op_state.ERROR)
@@ -133,27 +143,41 @@ class WriteResults(AppState):
         self.register_transition('terminal', Role.BOTH)
 
     def run(self) -> str:
-        data, config_file = self.await_data(n=1, unwrap=True, is_json=False)
+        train, test, config_file = self.await_data(n=1, unwrap=True, is_json=False)
         if self.is_coordinator:
-            file_name = self.load('output_files')['data'][0]
+            train_file_name = self.load('output_files')['train'][0]
+            test_set = self.load('config')['local_dataset'].get('test', False)
+            if test_set:
+                test_file_name = self.load('output_files')['test'][0]
             target = self.load('config')['local_dataset']['target_value']
             sep = self.load('config')['local_dataset']['sep']
         else:
-            log_data(data, self.log)
+            log_data(train, self.log)
             log_data(config_file, self.log)
             output_path = "/mnt/output/"
-            file_name = output_path + config_file[name]['result']['data']
+            train_file_name = output_path + config_file[name]['result']['train']
+            test_set = config_file[name]['local_dataset'].get('test', False)
+            if test_set:
+                test_file_name = output_path + test_set
             config_filename = output_path + 'config.yml'
             target = config_file[name]['local_dataset']['target_value']
             sep = config_file[name]['local_dataset']['sep']
             bios.write(config_filename, config_file)
-        format = file_name.split('.')[-1]
+        format = train_file_name.split('.')[-1]
 
         if format == 'npy':
-            save_numpy(file_name, data.features.values, data.label.values, target)
+            save_numpy(train_file_name, train.features.values, train.label.values, target)
+            if test_set:
+                save_numpy(test_file_name, test.features.values, test.label.values, target)
+
         elif format == 'npz':
-            np.savez_compressed(file_name, data=data.features.values, targets=data.label.values)
+            np.savez_compressed(train_file_name, data=train.features.values, targets=train.label.values)
+            if test_set:
+                np.savez_compressed(test_file_name, data=test.features.values, targets=test.label.values)
         else:
-            data.rename(columns={'label': target}, inplace=True)
-            data.to_csv(file_name, sep=sep, index=False)
+            train.rename(columns={'label': target}, inplace=True)
+            train.to_csv(train_file_name, sep=sep, index=False)
+            if test_set:
+                test.rename(columns={'label': target}, inplace=True)
+                test.to_csv(test_file_name, sep=sep, index=False)
         return 'terminal'

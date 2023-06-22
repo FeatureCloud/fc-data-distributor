@@ -1,6 +1,6 @@
 fc_data_distributor:
   local_dataset:
-    data: data.npy
+    train: data.npy
     task: classification
     target_value: 'same-sep'
     sep: ','
@@ -8,4 +8,4 @@ fc_data_distributor:
     type: IID
     non_iid_ness: 1
   result:
-    data: data.npy
+    train: data.npy

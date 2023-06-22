@@ -58,7 +58,7 @@ def supervised_iid_sampling(df, clients):
         a dataframe including ASSIGNED_CLIENT column to indicate the corresponding client
             that the sample should be assigned.
     """
-    labels = df.label.unique()
+    labels = sorted(df.label.unique())
     clients_data = pd.DataFrame({})
     for label in labels:
         target_label = df[df.label == label]
@@ -70,7 +70,7 @@ def supervised_iid_sampling(df, clients):
                 drop_indices = np.random.choice(target_label.index.values.tolist(), proportion, replace=False)
             data = target_label.loc[drop_indices]
             data['ASSIGNED_CLIENT'] = client
-            clients_data = clients_data.append(data, ignore_index=True)
+            clients_data = pd.concat([clients_data, data], ignore_index=True)
             target_label = target_label.drop(drop_indices)
     return clients_data
 
@@ -104,7 +104,7 @@ def noniid_sampling(df, clients, noniid):
         a dataframe including ASSIGNED_CLIENT column to indicate the corresponding client
             that the sample should be assigned.
     """
-    labels = df.label.unique()
+    labels = sorted(df.label.unique())
     all_splits = [[] for _ in range(noniid)]
     for label in labels:
         target_label = df[df.label == label]
@@ -126,12 +126,12 @@ def noniid_sampling(df, clients, noniid):
         for _ in range(n_labels_for_assign):
             data = splits[counter]
             data['ASSIGNED_CLIENT'] = client
-            clients_data = clients_data.append(data, ignore_index=True)
+            clients_data = pd.concat([clients_data, data], ignore_index=True)
             counter += 1
         if extras > 0:
             data = splits[counter]
             data['ASSIGNED_CLIENT'] = client
-            clients_data = clients_data.append(data, ignore_index=True)
+            clients_data = pd.concat([clients_data, data], ignore_index=True)
             counter += 1
             extras -= 1
     return clients_data
@@ -150,7 +150,8 @@ def plot_clients_data(df, path):
     ax.legend(bbox_to_anchor=(0.99, 1.05))
     for v in df.ASSIGNED_CLIENT.unique()[:-1]:
         plt.axvline(x=v, color='black', linestyle='dotted')
-    plt.savefig(f'{path}/hist.png')
+    plt.savefig(f'{path}-hist.png')
+    plt.close()
 
 
 def unsupervised_iid_sampling():
